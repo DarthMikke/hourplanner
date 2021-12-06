@@ -36,3 +36,46 @@
     transform: rotate(360deg);
   }
 }
+
+.hiding-button {
+  animation: fadeIn 0.5s;
+  opacity: 1.0;
+}
+
+.hiding-button.hide {
+  opacity: 0.0;
+  animation: fadeOut 0.5s;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1.0;
+  }
+
+  to {
+    opacity: 0.0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.0;
+  }
+
+  to {
+    opacity: 1.0;
+  }
+}
+
+/*
+.addbutton {
+  animation-name: fadeIn;
+  animation-duration: .25s;
+  animation-delay: .25s;
+  -webkit-animation: ;
+}
+
+.addbutton.hide {
+  animation-name: fadeOut;
+}
+ */
