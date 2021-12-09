@@ -73,18 +73,19 @@ export default class SingleWorkingHoursEditing extends Component {
         style={{width: "4em"}}
         value={this.state.from}
         onChange={this.handleInputFrom} />
-      <img
-        key="save-icon"
-        src={SaveIcon}
-        onClick={() => { this.save() }} />
-      <br key=""/>
+      <br key="input-break-1"/>
       <input
         className={classnames[1]}
         type="text"
         style={{width: "4em"}}
         value={this.state.to}
         onChange={this.handleInputTo} />
+      <br key="input-break-2"/>
       <img src={Trash} onClick={() => { this.delete() }} />
+      <img
+        key="save-icon"
+        src={SaveIcon}
+        onClick={() => { this.save() }} />
     </form>
   }
 }

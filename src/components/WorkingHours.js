@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
-import { ReactComponent as AddIcon } from '../icons/plus-circle.svg'
-import Pencil from '../icons/pencil.svg'
-import Trash from '../icons/trash.svg'
+import { ReactComponent as AddIcon } from '../icons/plus-circle.svg';
+import Pencil from '../icons/pencil.svg';
+import Trash from '../icons/trash.svg';
+import { ReactComponent as ErrorIcon } from '../icons/exclamation-triangle-fill.svg';
+import { ReactComponent as WaitingIcon } from '../icons/cloud-arrow-up.svg';
 
 import SingleWorkingHoursEditing from '../components/SingleWorkingHoursEditing.js'
 
@@ -21,6 +23,8 @@ class WorkingHours extends Component {
     this.f = Intl.DateTimeFormat(locale, {hour: 'numeric', minute: 'numeric'})
     this.state = {
       editing: false,
+      error: false,
+      waiting: false,
       showButtons: false,
       from: undefined,
       to: undefined
@@ -50,6 +54,7 @@ class WorkingHours extends Component {
   }
 
   edit(wh_id) {
+    console.log(`Editing ${wh_id}.`);
     this.setState({
       editing: wh_id,
       from: this.f.format(this.viewmodels.filter(x => x.workhour_id === wh_id)[0].from),
@@ -58,16 +63,72 @@ class WorkingHours extends Component {
   }
 
   save(from, to) {
-    let wh_id = this.state.editing
-    /* TODO:
-      Oppdater viewmodels,
-      send API-førespurnad,
-      oppdater viewmodels med data frå serveren.
-     */
-    this.setState({editing: false})
+    // Oppdater viewmodels
+    let wh_id = this.state.editing;
+    let index = this.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+    let newFrom, newTo;
+    newFrom = new Date(
+      this.props.day.getFullYear(),
+      this.props.day.getMonth(),
+      this.props.day.getDate(),
+      parseInt(from.substr(0, from.indexOf(':'))),
+      parseInt(from.substr(from.indexOf(':') + 1))
+    )
+    newTo = new Date(
+      this.props.day.getFullYear(),
+      this.props.day.getMonth(),
+      this.props.day.getDate(),
+      parseInt(to.substr(0, to.indexOf(':'))),
+      parseInt(to.substr(to.indexOf(':') + 1))
+    )
+    console.log(`${newFrom}–${newTo}`);
+    this.viewmodels[index].from = newFrom;
+    this.viewmodels[index].to = newTo;
+
+    // Avslutt redigering
+    this.setState({
+      waiting: wh_id,
+      editing: false
+    });
+
+    // Send API-førespurnad
+    let formData = new FormData();
+    for (let x in Object.keys(this.viewmodels[index])
+      .filter(x => x != "workhour_id")) {
+      formData.append(x, this.viewmodels[index][x])
+    }
+    fetch("api/records/create", { method: "POST", body: formData })
+      .then(response => {
+        if (!response.ok) {
+          console.log(`Request answered with status ${response.status}.`);
+          return {error: response.status}
+        }
+        console.log(response)
+        return response.json()
+      })
+      .then((data) => {
+        console.log(data)
+        if (Object.keys(data).find(x => x === "error") !== undefined) {
+          this.setState({waiting: false, error: wh_id})
+          return
+        }
+
+        console.log("Received a response (probably a working hours record) from the server:")
+        // Oppdater viewmodels med data frå serveren.
+        let waitTime = window.location.hostname === "localhost" ? 3000 : 1000
+        console.log(`Waiting ${waitTime} ms…`)
+        setTimeout(() => {
+          this.viewmodels[index]
+            .workhour_id = data.planned_workhour_id;
+          this.viewmodels[index].from = new Date(data.from);
+          this.viewmodels[index].to = new Date(data.to);
+
+          this.setState({waiting: false})
+        }, waitTime);
+      })
   }
 
-  delete(wh_id) {
+  delete() {
     // TODO
   }
 
@@ -83,30 +144,43 @@ class WorkingHours extends Component {
     let divContent = this.viewmodels.map(x => {
       let returnContent = null
       if (this.state.editing === x.workhour_id) {
-        console.log(`Dette elementet har id ${x.workhour_id}. Redigerer no ${this.state.editing}.`)
         returnContent = [
           <SingleWorkingHoursEditing
             key={`single-working-hours-${this.props.day}`}
             from={this.state.from}
             to={this.state.to}
             completion={(from, to) => {this.save(from, to)}}
+            deleteCompletion={() => {this.delete()}}
           />
         ]
       } else {
-        returnContent = [
-          <span>frå {this.f.format(x.from)}</span>,
-          this.state.showButtons ? 
+        let displayBadge = false
+        let badgeContent = null
+        if (this.state.error === x.workhour_id) {
+          badgeContent = <ErrorIcon fill='black' key={`error-${x.workhour_id}`} />
+          displayBadge = true
+          console.log(`${x.workhour_id} støtte på ein feil.`)
+        } else if(this.state.waiting === x.workhour_id) {
+          badgeContent = <WaitingIcon fill='black' key={`waiting-${x.workhour_id}`} />
+          displayBadge = true
+          console.log(`${x.workhour_id} ventar på respons.`)
+        }
+        let badge = displayBadge ? <><br/><span className="badge">{badgeContent}</span></> : null
+        console.log(displayBadge, badgeContent)
+        returnContent = <>
+          <span>frå {this.f.format(x.from)}</span>
+          {this.state.showButtons ? 
             <span className="badge">
               <img
                 onClick={() => { this.edit(x.workhour_id) }}
                 src={Pencil} />
-            </span> : null
-          ,
-          <br/>,
+            </span> : null}
+          <br/>
           <span>til {this.f.format(x.to)}</span>
-        ]
+          { badge }
+        </>
       }
-      return <div className="border-bottom text-center align-items-center">
+      return <div className="border-bottom text-center align-items-center py-2">
         {returnContent}
       </div>
     })
@@ -125,15 +199,13 @@ class WorkingHours extends Component {
     return <td
       style={{width: "8.5em"}}
       onMouseEnter={() => {
-          if (this.state.editing != false) { return } 
+          if (this.state.editing !== false) { return } 
           this.setState({showButtons: true});
-          // console.log(`In (${this.state.showButtons})`)
         }
       }
       onMouseLeave={() => {
-          if (this.state.editing != false) { return } 
+          if (this.state.editing !== false) { return } 
           this.setState({showButtons: false});
-          // console.log(`Out (${this.state.showButtons})`)
         }
       }
       key={`employee-row-cell-${this.viewmodels.count > 0 ? this.viewmodels[0].from : Math.floor(Math.random() * 1000)}`}>
