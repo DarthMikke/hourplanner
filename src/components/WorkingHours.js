@@ -34,8 +34,8 @@ class WorkingHours extends Component {
     this.edit = this.edit.bind(this)
     this.save = this.save.bind(this)
     this.delete = this.delete.bind(this)
-    this.handleInputFrom = this.handleInputFrom.bind(this)
-    this.handleInputTo = this.handleInputTo.bind(this)
+    /*this.handleInputFrom = this.handleInputFrom.bind(this)
+    this.handleInputTo = this.handleInputTo.bind(this)*/
   }
 
   create() {
@@ -49,8 +49,6 @@ class WorkingHours extends Component {
       duration: (to - from)/1000/3600 // TODO: Forhandsinnstilte standardarbeidstider
     })
     this.setState({editing: undefined})
-
-    // TODO: Asynkront: send API-førespurnad og oppdater workhour_id.
   }
 
   edit(wh_id) {
@@ -97,7 +95,11 @@ class WorkingHours extends Component {
       .filter(x => x != "workhour_id")) {
       formData.append(x, this.viewmodels[index][x])
     }
-    fetch("api/records/create", { method: "POST", body: formData })
+
+    // TODO: Different API endpoints for creating and adding an entry.
+    // Differentiate by `typeof(this.state.editing)` (undefined or int).
+    let endpoint = this.state.editing === undefined ? "api/records/create" : "api/records/update"
+    fetch(endpoint, { method: "POST", body: formData })
       .then(response => {
         if (!response.ok) {
           console.log(`Request answered with status ${response.status}.`);
@@ -108,7 +110,7 @@ class WorkingHours extends Component {
       })
       .then((data) => {
         console.log(data)
-        if (Object.keys(data).find(x => x === "error") !== undefined) {
+        if (data.error !== undefined) {
           this.setState({waiting: false, error: wh_id})
           return
         }
@@ -132,13 +134,13 @@ class WorkingHours extends Component {
     // TODO
   }
 
-  handleInputFrom(event) {
+  /* handleInputFrom(event) {
     this.setState({from: event.target.value})
   }
 
   handleInputTo(event) {
     this.setState({to: event.target.value})
-  }
+  } */
 
   render() {
     let divContent = this.viewmodels.map(x => {
