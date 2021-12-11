@@ -214,7 +214,12 @@ class WorkingHours extends Component {
           { badge }
         </>
       }
-      return <div className="border-bottom text-center align-items-center py-2">
+      let classes = ["border-bottom", "text-center", "align-items-center", "py-2"]
+      classes.push((this.state.error === x.workhour_id
+        || this.state.waiting_to_delete === x.workhour_id)
+          ? "waiting-for-deletion"
+          : null)
+      return <div className={classes.join(" ")}>
         {returnContent}
       </div>
     })

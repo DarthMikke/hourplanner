@@ -67,6 +67,11 @@
   }
 }
 
+.waiting-for-deletion {
+  opacity: 0.5;
+  /* animation: fadeOut; */
+}
+
 /*
 .addbutton {
   animation-name: fadeIn;
