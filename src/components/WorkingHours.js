@@ -25,6 +25,7 @@ class WorkingHours extends Component {
       editing: false,
       error: false,
       waiting: false,
+      waiting_to_delete: false,
       showButtons: false,
       from: undefined,
       to: undefined
@@ -131,7 +132,39 @@ class WorkingHours extends Component {
   }
 
   delete() {
-    // TODO
+    let wh_id = this.state.editing;
+    let index = this.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+
+    this.setState({waiting_to_delete: wh_id, editing: false});
+
+    // Send API-førespurnad
+    let formData = new FormData();
+    for (let x in Object.keys(this.viewmodels[index])
+      .filter(x => x != "workhour_id")) {
+      formData.append(x, this.viewmodels[index][x])
+    }
+
+    fetch('api/records/delete', { method: 'POST', body: formData })
+      .then(x => {
+        if (!x.ok) {
+          this.setState({error: wh_id, waiting_to_delete: false});
+        }
+        console.log("#152");
+        return x.json();
+      })
+      .catch((e) => {
+        this.setState({error: wh_id, waiting_to_delete: false});
+        console.log(`Error #157: ${e}`)
+        return {error: e}
+      })
+      .then((data) => {
+        if (data.error !== undefined) {
+          return
+        }
+        let removed = this.viewmodels.splice(index, 1);
+        this.setState({waiting_to_delete: false});
+        console.log("#166");
+      });
   }
 
   /* handleInputFrom(event) {
@@ -168,7 +201,6 @@ class WorkingHours extends Component {
           console.log(`${x.workhour_id} ventar på respons.`)
         }
         let badge = displayBadge ? <><br/><span className="badge">{badgeContent}</span></> : null
-        console.log(displayBadge, badgeContent)
         returnContent = <>
           <span>frå {this.f.format(x.from)}</span>
           {this.state.showButtons ? 

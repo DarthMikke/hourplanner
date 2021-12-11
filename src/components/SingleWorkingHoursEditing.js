@@ -23,6 +23,7 @@ export default class SingleWorkingHoursEditing extends Component {
     this.handleInputFrom = this.handleInputFrom.bind(this)
     this.handleInputTo = this.handleInputTo.bind(this)
     this.save = this.save.bind(this)
+    this.delete = this.delete.bind(this)
   }
 
   handleInputFrom(event) {
@@ -51,6 +52,10 @@ export default class SingleWorkingHoursEditing extends Component {
       return
     }
     this.props.completion(this.state.from, this.state.to)
+  }
+
+  delete() {
+    this.props.deleteCompletion()
   }
 
   render() {
