@@ -28,6 +28,9 @@ export default class WeekdaysRow extends Component {
           let include = include1 && include2 && include3
           return include
         })
+
+      console.log(`Working hours for ${this.props.employee.verbose} on ${date.toISOString()}:`)
+      console.log(working_hours_this_day)
       return <WorkingHours
         key={date} 
         day={date}

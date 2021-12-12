@@ -1,27 +1,43 @@
 import React, { Component } from 'react';
+import DateRangePicker from './components/DateRangePicker.js';
 import WorkingHours from './components/WorkingHours.js';
 import WeekdaysRow from './components/WeekdaysRow.js';
-import EmployeeRow from './components/EmployeeRow.js'
+import EmployeeRow from './components/EmployeeRow.js';
 import './App.css';
 
-class App extends Component {
+class WeeklyView extends Component {
   f = Intl.DateTimeFormat('nn', {weekday: 'short', day: 'numeric', month: 'numeric'})
   f2 = Intl.DateTimeFormat('nn', {hour: 'numeric', minute: 'numeric'})
   f3 = Intl.DateTimeFormat('nn', {day: 'numeric', month: 'numeric'})
+  f4 = Intl.DateTimeFormat('nn', {year: 'numeric', month: '2-digit', day: '2-digit'})
   constructor(props) {
     super(props)
 
     // this.f = Intl.DateTimeFormat('nn', {weekday: 'short', day: 'numeric', month: 'numeric'})
 
-    this.state = {dates: [], employees: [], plannedWorkhours: []}
+    let today = this.f4.formatToParts(new Date())
+    let year = today.find(x => x.type === "year").value
+    let month = today.find(x => x.type === "month").value
+    let day = today.find(x => x.type === "day").value
+
+    let from = new Date(`${year}-${month}-${day}`)
+    let to = new Date((from/1000 + 24*3600*7)*1000)
+    this.state = {
+      loaded: false,
+      from: from,
+      to: to,
+      company: undefined,
+      divisions: [],
+      dates: [],
+      employees: [],
+      plannedWorkhours: []
+    }
     this.loadData = this.loadData.bind(this)
   }
 
   componentDidMount() {
-    let from = new Date(2021, 11, 1)
-    let to = new Date(from/1000 + 24*3600)
     // TODO: fromString, toString
-    this.loadData("2021-11-01", "2021-11-07")
+    this.loadData(this.state.from, this.state.to)
   }
 
   loadData(from, to) {
@@ -39,7 +55,13 @@ class App extends Component {
       .then(response => response.json())
       .then(x => {
         console.log(x)
-        this.setState({plannedWorkhours: x.planned_workhours, employees: x.employees}) // TODO: Sorter etter tid og alfabetisk
+        this.setState({
+          company: x.company,
+          divisions: x.divisions,
+          plannedWorkhours: x.planned_workhours, // TODO: Sorter etter tid
+          employees: x.employees, // TODO: Sorter alfabetisk
+          loaded: true
+        })
         return true
       })
 
@@ -58,11 +80,16 @@ class App extends Component {
        employee={employee} />
     })
 
+    if (!this.state.loaded) {
+      return <div className="WeeklyView">Loading...</div>
+    }
+
     return (
-      <div className="App">
-        <div key="datePicker">{firstDay}–{lastDay}</div>
+      <div className="WeeklyView">
+        <h1>{this.state.company.name}</h1>
+        <DateRangePicker from={this.state.from} to={this.state.to} completion={(from, to) => this.loadData(from, to)} />
         <div key="table" className="table-responsive">
-          <table className="table">
+          <table className="table small">
             <thead>
               <tr>
                 <th scope="col">Tilsett</th>
@@ -82,13 +109,13 @@ class App extends Component {
   }
 }
 
-function plannedDay(props) {
+/*function plannedDay(props) {
   return [
   <td>
     {props.planned_workhours.map(x => `Frå: ${x.from}<br/>Til: ${x.to}.`)}
   </td>,
   <td>{props.planned_workhours.reduce((a, b) => a + b)}</td>
   ]
-}
+}*/
 
-export default App;
+export default WeeklyView;

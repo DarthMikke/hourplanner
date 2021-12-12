@@ -1,18 +1,18 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # directories with many unused files
-/src/icons
+frontend/src/icons
 
 # dependencies
-/node_modules
-/.pnp
-.pnp.js
+frontend/node_modules
+frontend/*.pnp
+frontend/*.pnp.js
 
 # testing
-/coverage
+frontend/coverage
 
 # production
-/build
+frontend/build
 
 # misc
 .DS_Store
