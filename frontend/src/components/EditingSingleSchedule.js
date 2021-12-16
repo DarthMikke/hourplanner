@@ -1,4 +1,4 @@
-// SingleWorkingHoursEditing.js
+// EditingSingleSchedule.js
 
 import React, { Component } from 'react';
 import { ReactComponent as AddIcon } from '../icons/plus-circle.svg'
@@ -6,7 +6,7 @@ import Pencil from '../icons/pencil.svg'
 import SaveIcon from '../icons/check2-circle.svg'
 import Trash from '../icons/trash.svg'
 
-export default class SingleWorkingHoursEditing extends Component {
+export default class EditingSingleSchedule extends Component {
   f = null
   constructor(props) {
     super(props)

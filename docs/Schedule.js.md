@@ -1,8 +1,8 @@
-# WorkingHours.js
+# Schedule.js
 
-A react component displaying planned workhours for a single day. Takes a list of objects containing timespans as properties.
+A react component displaying scheduled workhours for a single day. Takes a list of objects containing timespans as properties.
 
-Every span of hours is displayed in its own `<div />`. A single timespan can be edited at a time. If a timespan is being edited, it will be rendered by `<SingleWorkingHoursEditing />` instead of a `<div />`.
+Every span of hours is displayed in its own `<div />`. A single timespan can be edited at a time. If a timespan is being edited, it will be rendered by `<SingleScheduleEditing />` instead of a `<div />`.
 
 ## Status
 Every hourspan can be edited, and will send an API request upon saving. Saving status is to be displayed as an icon in the component's `<div />`. The order of events is:

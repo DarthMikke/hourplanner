@@ -5,9 +5,9 @@ import Trash from '../icons/trash.svg';
 import { ReactComponent as ErrorIcon } from '../icons/exclamation-triangle-fill.svg';
 import { ReactComponent as WaitingIcon } from '../icons/cloud-arrow-up.svg';
 
-import SingleWorkingHoursEditing from '../components/SingleWorkingHoursEditing.js'
+import EditingSingleSchedule from '../components/EditingSingleSchedule.js'
 
-class WorkingHours extends Component {
+class Schedule extends Component {
   viewmodel = null
   f = null
 
@@ -180,8 +180,8 @@ class WorkingHours extends Component {
       let returnContent = null
       if (this.state.editing === x.workhour_id) {
         returnContent = [
-          <SingleWorkingHoursEditing
-            key={`single-working-hours-${this.props.day}`}
+          <EditingSingleSchedule
+            key={`single-schedule-${this.props.day}`}
             from={this.state.from}
             to={this.state.to}
             completion={(from, to) => {this.save(from, to)}}
@@ -256,4 +256,4 @@ class WorkingHours extends Component {
   }
 }
 
-export default WorkingHours;
+export default Schedule;

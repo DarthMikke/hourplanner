@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import DateRangePicker from './DateRangePicker.js';
-import WorkingHours from './WorkingHours.js';
+import Schedule from './Schedule.js';
 import WeekdaysRow from './WeekdaysRow.js';
 import EmployeeRow from './EmployeeRow.js';
 import '../App.css';
