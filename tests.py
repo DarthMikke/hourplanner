@@ -121,6 +121,8 @@ class ListTestCase(TestCase):
         serialized_employees = [x.serialize() for x in self.employees]
         serialized_divisions = [x.serialize() for x in self.divisions]
 
+        self.assertEqual(response.status, 200)
+
         for i in range(len(self.employees)):
             self.assertTrue(response['employees'][i] in serialized_employees)
 
