@@ -37,25 +37,25 @@ def schedules_list(request):
         and 'from' in request.GET.keys()
         and 'to' in request.GET.keys()
         ):
-        return Responses.bad_request()
+        return Responses.bad_request(data={'internal_error_code': 1})
 
     # validate the GET fields.
     try:
         int(request.GET['company'])
     except ValueError:
-        return Responses.bad_request()
+        return Responses.bad_request(data={'internal_error_code': 2})
     
     try:
-        start = datetime.fromisoformat(request.GET['from'])
+        start = datetime.fromisoformat(request.GET['from'].replace("Z", "+00:00"))
     except ValueError as e:
         print(e)
-        return Responses.bad_request()
+        return Responses.bad_request(data={'internal_error_code': 3})
     
     try:
-        end = datetime.fromisoformat(request.GET['to'])
+        end = datetime.fromisoformat(request.GET['to'].replace("Z", "+00:00"))
     except ValueError as e:
         print(e)
-        return Responses.bad_request()
+        return Responses.bad_request(data={'internal_error_code': 4})
 
     end_filter = end + timedelta(1)
 
@@ -90,3 +90,6 @@ def schedules_list(request):
     }
 
     return JsonResponse(response)
+
+def main(request):
+    return render(request, 'planner/app.html')

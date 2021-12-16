@@ -118,14 +118,14 @@ class Schedule(models.Model):
 
     def __str__(self):
         lang = get_language()
-        return f"{employee.name}, {format_datetime(start, locale=lang)}–{format_time(end, locale=lang)}"
+        return f"{self.employee.name}, {format_datetime(self.start, locale=lang)}–{format_time(self.end, locale=lang)}"
 
     def serialize(self):
         serialized = {
             "schedule_id": self.schedule_id,
             "employee": self.employee.employee_id,
             "division": self.division.division_id,
-            "from": self.start.isoformat(),
-            "to": self.end.isoformat(),
+            "from": self.start.isoformat().replace("+00:00", "Z"),
+            "to": self.end.isoformat().replace("+00:00", "Z"),
         }
         return serialized
