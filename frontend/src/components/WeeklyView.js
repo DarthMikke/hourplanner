@@ -72,7 +72,7 @@ class WeeklyView extends Component {
       .then(x => {
         console.log(x)
         this.setState({
-          company: x.company,
+          //company: x.company,
           divisions: x.divisions,
           schedules: x.schedules, // TODO: Sorter etter tid
           employees: x.employees, // TODO: Sorter alfabetisk
