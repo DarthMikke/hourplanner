@@ -6,16 +6,16 @@ class CompanyNameFilter(admin.SimpleListFilter):
     title = 'Company'
     parameter_name = 'company'
 
-    """
-    Returns the available company names
-    """
     def lookups(self, request, model_admin):
+        """
+        Returns the available company names
+        """
         return [(y, y) for y in [x.name for x in Company.objects.all()]]
 
     def queryset(self, request, queryset):
         if self.value() == None:
             return queryset
-        
+
         company = Company.objects.get(name=self.value())
         divisions = Division.objects.filter(company=company.company_id)
         return Employee.objects.filter(division__in=divisions)
