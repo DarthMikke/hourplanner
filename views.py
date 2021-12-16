@@ -22,3 +22,11 @@ def me(request):
       "division": employee.division.serialize(),
     }
     return JsonResponse(response)
+
+def schedules_list(request):
+    # is the user authenticated?
+    # if the user is not authenticated, return 404 with JSON error
+    if not request.user.is_authenticated:
+        return Responses.unauthorized()
+
+    ...

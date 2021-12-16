@@ -92,3 +92,16 @@ def create_user_profile(sender, instance, created, **kwargs):
 #def save_user_profile(sender, instance, **kwargs):
 #    instance.employee.accessToken = Employee.generateToken()
 #    instance.employee.save()
+
+class Schedule(models.Model):
+    """Scheduled work hours"""
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    division = models.ForeignKey(Division, on_delete=models.SET_NULL, null=True)
+    start = models.DateTimeField()
+    end = models.DateTimeField()
+
+    def __str__(self):
+        ...
+
+    def serialize(self):
+        ...
