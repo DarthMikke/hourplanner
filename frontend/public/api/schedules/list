@@ -37,7 +37,7 @@
       "company": [1]
     }
   ],
-  "planned_workhours": [
+  "schedules": [
     {
       "planned_workhour_id": 1,
       "division_id": 1,

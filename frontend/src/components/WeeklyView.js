@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import DateRangePicker from './components/DateRangePicker.js';
-import WorkingHours from './components/WorkingHours.js';
-import WeekdaysRow from './components/WeekdaysRow.js';
-import EmployeeRow from './components/EmployeeRow.js';
-import './App.css';
+import DateRangePicker from './DateRangePicker.js';
+import WorkingHours from './WorkingHours.js';
+import WeekdaysRow from './WeekdaysRow.js';
+import EmployeeRow from './EmployeeRow.js';
+import '../App.css';
 
 class WeeklyView extends Component {
   f = Intl.DateTimeFormat('nn', {weekday: 'short', day: 'numeric', month: 'numeric'})
@@ -30,14 +30,28 @@ class WeeklyView extends Component {
       divisions: [],
       dates: [],
       employees: [],
-      plannedWorkhours: []
+      schedules: [],
+      staff: false
     }
     this.loadData = this.loadData.bind(this)
   }
 
   componentDidMount() {
-    // TODO: fromString, toString
-    this.loadData(this.state.from, this.state.to)
+    // Load user data
+    fetch('api/me')
+      .then(response => response.json())
+      .then(data => {
+        console.log(data)
+        this.setState({
+          staff: data.employee.staff,
+          company: data.company.company_id
+        })
+
+        // Load schedules
+        // TODO: fromString, toString
+        this.loadData(this.state.from, this.state.to) // TODO: Load schedules after loading user data.
+      })
+
   }
 
   loadData(from, to) {
@@ -51,14 +65,16 @@ class WeeklyView extends Component {
     console.log(`Dates: ${dates}`)
     this.setState({startDate: startDate, endDate: endDate, dates: dates})
 
-    fetch(`api/list.json?from=${startDate.toString()}&to=${endDate.toString()}`)
+    let company = this.state.company == undefined ? null : this.state.company
+    // TODO: Use ISO formatted datetime strings.
+    fetch(`api/schedules/list?company=${company}&from=${startDate.toISOString()}&to=${endDate.toISOString()}`)
       .then(response => response.json())
       .then(x => {
         console.log(x)
         this.setState({
           company: x.company,
           divisions: x.divisions,
-          plannedWorkhours: x.planned_workhours, // TODO: Sorter etter tid
+          schedules: x.schedules, // TODO: Sorter etter tid
           employees: x.employees, // TODO: Sorter alfabetisk
           loaded: true
         })
@@ -76,7 +92,7 @@ class WeeklyView extends Component {
     let employees = this.state.employees.map(employee => {
       return <EmployeeRow
        dates={this.state.dates}
-       plannedWorkhours={this.state.plannedWorkhours}
+       plannedWorkhours={this.state.schedules}
        employee={employee} />
     })
 
