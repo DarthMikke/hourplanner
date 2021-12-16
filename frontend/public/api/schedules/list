@@ -7,83 +7,83 @@
   "employees": [
     {
       "employee_id": 1,
-      "verbose": "Alice",
+      "name": "Alice",
       "planned_workhours_ids": [1, 2, 3, 4, 5],
-      "division_ids": [1],
+      "divisions": [1],
       "company": [1]
     },
     {
       "employee_id": 2,
-      "verbose": "Bob",
+      "name": "Bob",
       "planned_workhours_ids": [
       ],
-      "division_ids": [1],
+      "divisions": [1],
       "company": [1]
     },
     {
       "employee_id": 3,
-      "verbose": "Charlotte",
+      "name": "Charlotte",
       "planned_workhours_ids": [
       ],
-      "division_ids": [1],
+      "divisions": [1],
       "company": [1]
     },
     {
       "employee_id": 4,
-      "verbose": "Denis",
+      "name": "Denis",
       "planned_workhours_ids": [
       ],
-      "division_ids": [1],
+      "divisions": [1],
       "company": [1]
     }
   ],
   "schedules": [
     {
-      "planned_workhour_id": 1,
-      "division_id": 1,
-      "employee_id": 1, 
+      "schedule_id": 1,
+      "division": 1,
+      "employee": 1, 
       "from": "2021-11-01T08:00:00+0100",
       "to": "2021-11-01T16:00:00+0100"
     },
     {
-      "planned_workhour_id": 2,
-      "division_id": 1,
-      "employee_id": 1,
+      "schedule_id": 2,
+      "division": 1,
+      "employee": 1,
       "from": "2021-11-02T08:00:00+0100",
       "to": "2021-11-02T16:00:00+0100"
     },
     {
-      "planned_workhour_id": 3,
-      "division_id": 1,
-      "employee_id": 1,
+      "schedule_id": 3,
+      "division": 1,
+      "employee": 1,
       "from": "2021-11-03T08:00:00+0100",
       "to": "2021-11-03T16:00:00+0100"
     },
     {
-      "planned_workhour_id": 4,
-      "division_id": 1,
-      "employee_id": 1,
+      "schedule_id": 4,
+      "division": 1,
+      "employee": 1,
       "from": "2021-11-04T08:00:00+0100",
       "to": "2021-11-04T16:00:00+0100"
     },
     {
-      "planned_workhour_id": 5,
-      "division_id": 1,
-      "employee_id": 1,
+      "schedule_id": 5,
+      "division": 1,
+      "employee": 1,
       "from": "2021-11-06T10:00:00+0100",
       "to": "2021-11-06T18:00:00+0100"
     },
     {
-      "planned_workhour_id": 6,
-      "division_id": 1,
-      "employee_id": 3,
+      "schedule_id": 6,
+      "division": 1,
+      "employee": 3,
       "from": "2021-11-06T18:00:00+0100",
       "to": "2021-11-06T20:00:00+0100"
     },
     {
-      "planned_workhour_id": 7,
-      "division_id": 1,
-      "employee_id": 3,
+      "schedule_id": 7,
+      "division": 1,
+      "employee": 3,
       "from": "2021-11-06T10:00:00+0100",
       "to": "2021-11-06T12:00:00+0100"
     }
