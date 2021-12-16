@@ -1,9 +1,10 @@
+from datetime import datetime, timedelta
 import hourplanner.Responses as Responses
 
 from django.shortcuts import render
 from django.http import JsonResponse
 
-from .models import Employee
+from .models import Employee, Company, Division, Schedule
 
 # Create your views here.
 
@@ -45,14 +46,18 @@ def schedules_list(request):
         return Responses.bad_request()
     
     try:
-        start = datetime.strptime(request.GET['from'], "%Y-%m-%d")
-    except ValueError:
+        start = datetime.fromisoformat(request.GET['from'])
+    except ValueError as e:
+        print(e)
         return Responses.bad_request()
     
     try:
-        end = datetime.strptime(request.GET['to'], "%Y-%m-%d")
-    except ValueError:
+        end = datetime.fromisoformat(request.GET['to'])
+    except ValueError as e:
+        print(e)
         return Responses.bad_request()
+
+    end_filter = end + timedelta(1)
 
     # check that the user is employee at the specified company.
     # return 404 if company id is not among user's companies.
@@ -62,4 +67,26 @@ def schedules_list(request):
 
     # employee is successfully authenticated!
     # return list of schedules in the company in the requested time period.
-    return Responses.not_implemented()
+    divisions = Division.objects.filter(company=company)
+    schedules = []
+    for division in divisions:
+        [schedules.append(x.serialize()) for x in Schedule.objects.filter(
+            division=division,
+            start__gte=start,
+            start__lte=end_filter
+        )]
+    employees = []
+    for division in divisions:
+        [employees.append(x.serialize()) for x in Employee.objects.filter(division=division)]
+
+
+    response = {
+        "company": company.serialize(),
+        "divisions": [x.serialize() for x in divisions],
+        "employees": employees,
+        "schedules": schedules,
+        "from": start,
+        "to": end
+    }
+
+    return JsonResponse(response)
