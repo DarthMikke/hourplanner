@@ -15,7 +15,16 @@ class App extends Component {
   }
 
   render() {
-
+    switch (this.state.view) {
+      case 'weekly':
+        return (
+          <WeeklyView />
+          /* TODO: Statusbar */
+        );
+        break;
+      default:
+        return <p>An error has occured.</p>
+    }
     return (
       <WeeklyView />
       /* TODO: Statusbar */
