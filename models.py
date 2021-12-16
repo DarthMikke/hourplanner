@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils.translation import get_language
+from babel.dates import format_datetime, format_time
 
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -42,6 +44,7 @@ class Employee(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
     #accessToken = models.CharField(max_length=100)
+    # TODO: *divisions* should be a many to many field
     division = models.ForeignKey(Division, on_delete=models.CASCADE, null=True)
 
     def __str__(self):
@@ -55,6 +58,7 @@ class Employee(models.Model):
 
     def serialize(self):
         company_id = None if self.division is None else self.get_company().company_id
+        # TODO: *division_ids* should be a list of divisions.
         division_id = None if self.division is None else self.division.division_id
 
         return {
@@ -64,6 +68,17 @@ class Employee(models.Model):
             "division": division_id,
             "company": company_id,
         }
+
+    def add_schedule(self, start, end, division=None):
+        if division is None:
+            division = self.division # TODO: Vel første "division" eller hovudavdeling, dersom det blir spesifisert.
+        new_schedule = Schedule.objects.create(
+            employee=self,
+            division=division,
+            start=start,
+            end=end
+        )
+        return new_schedule
 
     #def generateToken():
     #    does_exist_already = True
@@ -95,13 +110,22 @@ def create_user_profile(sender, instance, created, **kwargs):
 
 class Schedule(models.Model):
     """Scheduled work hours"""
+    schedule_id = models.BigAutoField(primary_key=True)
     employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
     division = models.ForeignKey(Division, on_delete=models.SET_NULL, null=True)
     start = models.DateTimeField()
     end = models.DateTimeField()
 
     def __str__(self):
-        ...
+        lang = get_language()
+        return f"{employee.name}, {format_datetime(start, locale=lang)}–{format_time(end, locale=lang)}"
 
     def serialize(self):
-        ...
+        serialized = {
+            "schedule_id": self.schedule_id,
+            "employee": self.employee.employee_id,
+            "division": self.division.division_id,
+            "from": self.start.isoformat(),
+            "to": self.end.isoformat(),
+        }
+        return serialized

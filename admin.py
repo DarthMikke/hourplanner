@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Employee, Company, Division
+from .models import Employee, Company, Division, Schedule
 
 
 class CompanyNameFilter(admin.SimpleListFilter):
@@ -36,3 +36,4 @@ class DivisionAdmin(admin.ModelAdmin):
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Company, CompanyAdmin)
 admin.site.register(Division, DivisionAdmin)
+admin.site.register(Schedule)
