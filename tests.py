@@ -150,3 +150,53 @@ class SchedulesListTestCase(TestCase):
 
     def test_api_request_with_error(self):
         ... # TODO
+
+
+class AddScheduleAPITestCase(TestCase):
+    def setUp(self):
+        # Every test needs access to the request factory.
+        self.factory = RequestFactory()
+
+        # Create a user and the environment around
+        self.company = Company.objects.create(name='Test company')
+        self.division = Division.objects.create(name='Test company HQ', company=self.company)
+        self.user = User.objects.create_user(
+            username='test_user',
+            email='test@ema.il',
+            password='top_secret',
+            is_staff=True
+        )
+        self.employee = Employee.objects.get(user=self.user)
+        self.employee.division = self.division
+        self.employee.save()
+
+    def test_successfully(self):
+        start = "1996-07-16T08:00%2B01:00"
+        end = "1996-07-16T16:00%2B01:00"
+        # July 16, 1996 -- discovered the source of the Amazon River
+        request = self.factory.post(f"/planner/api/schedules/add", {
+            "employee"=employee_id,
+            "division"=division_id,
+            "from"=start,
+            "to"=end
+        })
+
+        request.user = self.user
+        response = schedule_add(request)
+        self.assertEqual(response.status_code, 200)
+        response = response.content
+        self.assertTrue('schedule_id' in response.keys())
+        self.assertEqual(type(response['schedule_id']), int)
+        self.assertTrue(len(Schedule.objects.filter(schedule_id=response['schedule_id'])), 1)
+        self.assertEqual(response['employee'], employee_id)
+        self.assertEqual(response['division'], division_id)
+
+        start_datetime = datetime.fromisoformat("1996-07-16T08:00+01:00")
+        end_datetime = datetime.fromisoformat("1996-07-16T16:00+01:00")
+        response_from_datetime = datetime.fromisoformat(response['from'].replace("Z", "+00:00"))
+        response_to_datetime = datetime.fromisoformat(response['to'].replace("Z", "+00:00"))
+        self.assertEqual(response_from_datetime, start_datetime)
+        self.assertEqual(response_to_datetime, end_datetime)
+
+    def test_with_non_staff_user(self):
+        ...
