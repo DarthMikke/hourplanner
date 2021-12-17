@@ -13,11 +13,14 @@ class Schedule extends Component {
 
   constructor(props) {
     super(props)
-    this.viewmodels = props.viewmodels
+    if (props.viewmodels.length >= 1) {
+      console.log(`Viewmodels on ${props.viewmodels[0].from.toISOString()}`)
+      console.log(props.viewmodels)
+    }
 
-    this.viewmodels.duration = props.viewmodels
+    /*this.viewmodels.duration = props.viewmodels
       .map(x => (x.to - x.from)/1000/3600)
-      .reduce((a, b) => a + b, 0)
+      .reduce((a, b) => a + b, 0)*/
 
     let locale = "locale" in props ? props.locale : 'nn'
     this.f = Intl.DateTimeFormat(locale, {hour: 'numeric', minute: 'numeric'})
@@ -27,6 +30,7 @@ class Schedule extends Component {
       waiting: false,
       waiting_to_delete: false,
       showButtons: false,
+      viewmodels: props.viewmodels,
       from: undefined,
       to: undefined
     }
@@ -42,29 +46,33 @@ class Schedule extends Component {
   create() {
     let from = new Date((this.props.day/1000 + 8*3600)*1000)
     let to = new Date((this.props.day/1000 + 16*3600)*1000)
-    this.viewmodels.push({
+    let new_viewmodels = this.state.viewmodels
+    new_viewmodels.push({
       employee_id: this.props.employee_id,
       workhour_id: undefined,
       from: from,
       to: to,
       duration: (to - from)/1000/3600 // TODO: Forhandsinnstilte standardarbeidstider
     })
-    this.setState({editing: undefined})
+    this.setState({
+      editing: undefined,
+      viewmodels: new_viewmodels,
+    })
   }
 
   edit(wh_id) {
     console.log(`Editing ${wh_id}.`);
     this.setState({
       editing: wh_id,
-      from: this.f.format(this.viewmodels.filter(x => x.workhour_id === wh_id)[0].from),
-      to: this.f.format(this.viewmodels.filter(x => x.workhour_id === wh_id)[0].to)
+      from: this.f.format(this.state.viewmodels.filter(x => x.workhour_id === wh_id)[0].from),
+      to: this.f.format(this.state.viewmodels.filter(x => x.workhour_id === wh_id)[0].to)
     })
   }
 
   save(from, to) {
     // Oppdater viewmodels
     let wh_id = this.state.editing;
-    let index = this.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+    let index = this.props.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
     let newFrom, newTo;
     newFrom = new Date(
       this.props.day.getFullYear(),
@@ -81,20 +89,22 @@ class Schedule extends Component {
       parseInt(to.substr(to.indexOf(':') + 1))
     )
     console.log(`${newFrom}–${newTo}`);
-    this.viewmodels[index].from = newFrom;
-    this.viewmodels[index].to = newTo;
+    let new_viewmodels = this.state.viewmodels
+    new_viewmodels[index].from = newFrom;
+    new_viewmodels[index].to = newTo;
 
     // Avslutt redigering
     this.setState({
       waiting: wh_id,
-      editing: false
+      editing: false,
+      viewmodels: new_viewmodels,
     });
 
     // Send API-førespurnad
     let formData = new FormData();
-    for (let x in Object.keys(this.viewmodels[index])
+    for (let x in Object.keys(this.state.viewmodels[index])
       .filter(x => x != "workhour_id")) {
-      formData.append(x, this.viewmodels[index][x])
+      formData.append(x, this.state.viewmodels[index][x])
     }
 
     // TODO: Different API endpoints for creating and adding an entry.
@@ -121,27 +131,27 @@ class Schedule extends Component {
         let waitTime = window.location.hostname === "localhost" ? 3000 : 1000
         console.log(`Waiting ${waitTime} ms…`)
         setTimeout(() => {
-          this.viewmodels[index]
-            .workhour_id = data.planned_workhour_id;
-          this.viewmodels[index].from = new Date(data.from);
-          this.viewmodels[index].to = new Date(data.to);
+          let viewmodels = this.state.viewmodels
+          viewmodels[index].workhour_id = data.planned_workhour_id;
+          viewmodels[index].from = new Date(data.from);
+          viewmodels[index].to = new Date(data.to);
 
-          this.setState({waiting: false})
+          this.setState({waiting: false, viewmodels: viewmodels})
         }, waitTime);
       })
   }
 
   delete() {
     let wh_id = this.state.editing;
-    let index = this.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+    let index = this.state.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
 
     this.setState({waiting_to_delete: wh_id, editing: false});
 
     // Send API-førespurnad
     let formData = new FormData();
-    for (let x in Object.keys(this.viewmodels[index])
+    for (let x in Object.keys(this.state.viewmodels[index])
       .filter(x => x != "workhour_id")) {
-      formData.append(x, this.viewmodels[index][x])
+      formData.append(x, this.state.viewmodels[index][x])
     }
 
     fetch('api/records/delete', { method: 'POST', body: formData })
@@ -161,7 +171,7 @@ class Schedule extends Component {
         if (data.error !== undefined) {
           return
         }
-        let removed = this.viewmodels.splice(index, 1);
+        let removed = this.state.viewmodels.splice(index, 1);
         this.setState({waiting_to_delete: false});
         console.log("#166");
       });
@@ -176,7 +186,7 @@ class Schedule extends Component {
   } */
 
   render() {
-    let divContent = this.viewmodels.map(x => {
+    let divContent = this.state.viewmodels.map(x => {
       let returnContent = null
       if (this.state.editing === x.workhour_id) {
         returnContent = [
@@ -247,7 +257,7 @@ class Schedule extends Component {
           this.setState({showButtons: false});
         }
       }
-      key={`employee-row-cell-${this.viewmodels.count > 0 ? this.viewmodels[0].from : Math.floor(Math.random() * 1000)}`}>
+      key={`employee-row-cell-${this.state.viewmodels.length > 0 ? this.state.viewmodels[0].from : Math.floor(Math.random() * 1000)}`}>
       <div className="flex-row border rounded-2 p-0">
         {divContent}
       </div>

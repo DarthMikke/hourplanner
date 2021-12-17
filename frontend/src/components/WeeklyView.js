@@ -21,7 +21,7 @@ class WeeklyView extends Component {
     let day = today.find(x => x.type === "day").value
 
     let from = new Date(`${year}-${month}-${day}`)
-    let to = new Date((from/1000 + 24*3600*7)*1000)
+    let to = new Date((from/1000 + 24*3600*6)*1000)
     this.state = {
       loaded: false,
       from: from,
@@ -63,7 +63,7 @@ class WeeklyView extends Component {
       dates.push(new Date(startTimestamp + i*24*3600*1000))
     }
     console.log(`Dates: ${dates}`)
-    this.setState({startDate: startDate, endDate: endDate, dates: dates})
+    this.setState({})
 
     let company = this.state.company == undefined ? null : this.state.company
     // TODO: Use ISO formatted datetime strings.
@@ -72,6 +72,9 @@ class WeeklyView extends Component {
       .then(x => {
         console.log(x)
         this.setState({
+          startDate: startDate,
+          endDate: endDate,
+          dates: dates,
           //company: x.company,
           divisions: x.divisions,
           schedules: x.schedules, // TODO: Sorter etter tid
