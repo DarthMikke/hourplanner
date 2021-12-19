@@ -55,11 +55,11 @@ export default class DateRangePicker extends Component {
 
   render() {
     return <div className="btn-group">
-      <button type="button" class="btn btn-primary" onClick={this.prevWeek}><PrevWeekIcon /></button>
-      <button type="button" class="btn btn-primary" onClick={this.prevDay}><PrevDayIcon /></button>
-      <button type="button" class="btn btn-outline-primary">{this.f.format(this.state.from)}–{this.f.format(this.state.to)}</button>
-      <button type="button" class="btn btn-primary" onClick={this.nextDay}><NextDayIcon /></button>
-      <button type="button" class="btn btn-primary" onClick={this.nextWeek}><NextWeekIcon /></button>
+      <button type="button" className="btn btn-primary" onClick={this.prevWeek}><PrevWeekIcon /></button>
+      <button type="button" className="btn btn-primary" onClick={this.prevDay}><PrevDayIcon /></button>
+      <button type="button" className="btn btn-outline-primary">{this.f.format(this.state.from)}–{this.f.format(this.state.to)}</button>
+      <button type="button" className="btn btn-primary" onClick={this.nextDay}><NextDayIcon /></button>
+      <button type="button" className="btn btn-primary" onClick={this.nextWeek}><NextWeekIcon /></button>
     </div>
   }
 }
