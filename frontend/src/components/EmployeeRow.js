@@ -15,7 +15,7 @@ export default class WeekdaysRow extends Component {
           let to = new Date(x.to)
           return {
             employee: x.employee,
-            workhour_id: x.schedule_id,
+            schedule_id: x.schedule_id,
             from: from,
             to: to,
             duration: (to - from)/1000/3600 // hours

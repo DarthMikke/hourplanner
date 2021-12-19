@@ -49,7 +49,7 @@ class Schedule extends Component {
     let new_viewmodels = this.state.viewmodels
     new_viewmodels.push({
       employee_id: this.props.employee_id,
-      workhour_id: undefined,
+      schedule_id: undefined,
       from: from,
       to: to,
       duration: (to - from)/1000/3600 // TODO: Forhandsinnstilte standardarbeidstider
@@ -64,15 +64,15 @@ class Schedule extends Component {
     console.log(`Editing ${wh_id}.`);
     this.setState({
       editing: wh_id,
-      from: this.f.format(this.state.viewmodels.filter(x => x.workhour_id === wh_id)[0].from),
-      to: this.f.format(this.state.viewmodels.filter(x => x.workhour_id === wh_id)[0].to)
+      from: this.f.format(this.state.viewmodels.filter(x => x.schedule_id === wh_id)[0].from),
+      to: this.f.format(this.state.viewmodels.filter(x => x.schedule_id === wh_id)[0].to)
     })
   }
 
   save(from, to) {
     // Oppdater viewmodels
     let wh_id = this.state.editing;
-    let index = this.props.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+    let index = this.props.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
     let newFrom, newTo;
     newFrom = new Date(
       this.props.day.getFullYear(),
@@ -103,7 +103,7 @@ class Schedule extends Component {
     // Send API-førespurnad
     let formData = new FormData();
     for (let x in Object.keys(this.state.viewmodels[index])
-      .filter(x => x != "workhour_id")) {
+      .filter(x => x != "schedule_id")) {
       formData.append(x, this.state.viewmodels[index][x])
     }
 
@@ -132,25 +132,39 @@ class Schedule extends Component {
         console.log(`Waiting ${waitTime} ms…`)
         setTimeout(() => {
           let viewmodels = this.state.viewmodels
-          viewmodels[index].workhour_id = data.planned_workhour_id;
+
+          viewmodels[index].schedule_id = data.schedule_id;
           viewmodels[index].from = new Date(data.from);
           viewmodels[index].to = new Date(data.to);
 
-          this.setState({waiting: false, viewmodels: viewmodels})
+          this.setState({waiting: false, viewmodels: viewmodels});
+
+          old_schedule.from = old_schedule.from.toISOString()
+          old_schedule.to = old_schedule.to.toISOString()
+          let new_schedule = {
+            schedule_id: data.schedule_id,
+            from: data.from,
+            to: data.to
+          }
+          this.props.completion(old_schedule, new_schedule);
+          /* TODO: completion should take old schedule and new schedule as parameters.
+           * However, the present thing does seem to work, but it will only be possible
+           * to evaluate it after the creation/updating API is in place.
+           */
         }, waitTime);
       })
   }
 
   delete() {
     let wh_id = this.state.editing;
-    let index = this.state.viewmodels.findIndex(x => {return x.workhour_id === wh_id})
+    let index = this.state.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
 
     this.setState({waiting_to_delete: wh_id, editing: false});
 
     // Send API-førespurnad
     let formData = new FormData();
     for (let x in Object.keys(this.state.viewmodels[index])
-      .filter(x => x != "workhour_id")) {
+      .filter(x => x != "schedule_id")) {
       formData.append(x, this.state.viewmodels[index][x])
     }
 
@@ -188,7 +202,7 @@ class Schedule extends Component {
   render() {
     let divContent = this.state.viewmodels.map(x => {
       let returnContent = null
-      if (this.state.editing === x.workhour_id) {
+      if (this.state.editing === x.schedule_id) {
         returnContent = [
           <EditingSingleSchedule
             key={`single-schedule-${this.props.day}`}
@@ -201,14 +215,14 @@ class Schedule extends Component {
       } else {
         let displayBadge = false
         let badgeContent = null
-        if (this.state.error === x.workhour_id) {
-          badgeContent = <ErrorIcon fill='black' key={`error-${x.workhour_id}`} />
+        if (this.state.error === x.schedule_id) {
+          badgeContent = <ErrorIcon fill='black' key={`error-${x.schedule_id}`} />
           displayBadge = true
-          console.log(`${x.workhour_id} støtte på ein feil.`)
-        } else if(this.state.waiting === x.workhour_id) {
-          badgeContent = <WaitingIcon fill='black' key={`waiting-${x.workhour_id}`} />
+          console.log(`${x.schedule_id} støtte på ein feil.`)
+        } else if(this.state.waiting === x.schedule_id) {
+          badgeContent = <WaitingIcon fill='black' key={`waiting-${x.schedule_id}`} />
           displayBadge = true
-          console.log(`${x.workhour_id} ventar på respons.`)
+          console.log(`${x.schedule_id} ventar på respons.`)
         }
         let badge = displayBadge ? <><br/><span className="badge">{badgeContent}</span></> : null
         returnContent = <>
@@ -216,7 +230,7 @@ class Schedule extends Component {
           {this.state.showButtons ? 
             <span className="badge">
               <img
-                onClick={() => { this.edit(x.workhour_id) }}
+                onClick={() => { this.edit(x.schedule_id) }}
                 src={Pencil} />
             </span> : null}
           <br/>
@@ -225,8 +239,8 @@ class Schedule extends Component {
         </>
       }
       let classes = ["border-bottom", "text-center", "align-items-center", "py-2"]
-      classes.push((this.state.error === x.workhour_id
-        || this.state.waiting_to_delete === x.workhour_id)
+      classes.push((this.state.error === x.schedule_id
+        || this.state.waiting_to_delete === x.schedule_id)
           ? "waiting-for-deletion"
           : null)
       return <div className={classes.join(" ")}>
