@@ -26,6 +26,9 @@ export default class WeekdaysRow extends Component {
           let include2 = planned_hours.from < new Date((date/1000 + 24*3600)*1000)
           let include3 = planned_hours.employee === this.props.employee.employee_id
           let include = include1 && include2 && include3
+          if (include) {
+            total_this_week += planned_hours.duration
+          }
           return include
         })
 
@@ -35,12 +38,18 @@ export default class WeekdaysRow extends Component {
         key={date} 
         day={date}
         employee_id={this.props.employee.employee_id}
-        viewmodels={schedule_this_day}/> // TODO: tomt eller "–" om det ikkje er nokon timar
+        viewmodels={schedule_this_day}
+        completion={(old_schedule, new_schedule) => {this.props.completion(old_schedule, new_schedule)}}/>
     })
+    if (total_this_week == 0) {
+      total_this_week = <td className="text-muted">–</td>
+    } else {
+      total_this_week = <td>{total_this_week} t</td>
+    }
     return <tr key={this.props.employee.employee_id}>
       <th>{this.props.employee.name}</th>
       {schedule}
-      <td>{total_this_week} t</td>
+      {total_this_week}
     </tr>
   }
 }

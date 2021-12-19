@@ -11,6 +11,7 @@ class WeeklyView extends Component {
   f3 = Intl.DateTimeFormat('nn', {day: 'numeric', month: 'numeric'})
   f4 = Intl.DateTimeFormat('nn', {year: 'numeric', month: '2-digit', day: '2-digit'})
   constructor(props) {
+    console.log("WeeklyView.constructor()")
     super(props)
 
     // this.f = Intl.DateTimeFormat('nn', {weekday: 'short', day: 'numeric', month: 'numeric'})
@@ -34,6 +35,7 @@ class WeeklyView extends Component {
       staff: false
     }
     this.loadData = this.loadData.bind(this)
+    this.updateSchedule = this.updateSchedule.bind(this)
   }
 
   componentDidMount() {
@@ -63,7 +65,6 @@ class WeeklyView extends Component {
       dates.push(new Date(startTimestamp + i*24*3600*1000))
     }
     console.log(`Dates: ${dates}`)
-    this.setState({})
 
     let company = this.state.company == undefined ? null : this.state.company
     // TODO: Use ISO formatted datetime strings.
@@ -72,8 +73,8 @@ class WeeklyView extends Component {
       .then(x => {
         console.log(x)
         this.setState({
-          startDate: startDate,
-          endDate: endDate,
+          from: from,
+          to: to,
           dates: dates,
           //company: x.company,
           divisions: x.divisions,
@@ -87,16 +88,48 @@ class WeeklyView extends Component {
     return
   }
 
+  updateSchedule(from, to) {
+
+    return
+  }
+
   render() {
-    let firstDay = this.f3.format(this.state.startDate)
-    let lastDay = this.f3.format(this.state.endDate)
+    let firstDay = this.f3.format(this.state.from)
+    let lastDay = this.f3.format(this.state.to)
 
     let headers = <WeekdaysRow dates={this.state.dates} />
     let employees = this.state.employees.map(employee => {
       return <EmployeeRow
        dates={this.state.dates}
        plannedWorkhours={this.state.schedules}
-       employee={employee} />
+       employee={employee}
+       completion={(old_schedule, new_schedule) => {this.loadData(this.state.from, this.state.to)}} />
+    })
+    let totals_row = this.state.dates.map((date) => {
+      let next_day = new Date(((date/1000)+24*3600)*1000)
+      let this_day_total = this.state.schedules
+        .map((schedule) => {
+          let from_date = new Date(schedule.from)
+          let to_date = new Date(schedule.to)
+          return {
+            from: from_date,
+            to: to_date,
+            duration: (to_date - from_date)/1000/3600
+          }
+        })
+        .filter((schedule) => {
+          let from_date = new Date(schedule.from)
+          let i1 = date <= from_date
+          let i2 = from_date < next_day
+          return i1 && i2
+        })
+        .map((x) => x.duration)
+        .reduce((a, b) => (a + b), 0)
+
+      if (this_day_total == 0) {
+        return <td className="text-muted">–</td>
+      }
+      return <td>{this_day_total} t</td>
     })
 
     if (!this.state.loaded) {
@@ -120,6 +153,13 @@ class WeeklyView extends Component {
               {employees}
               {/* TODO: Totalrad */}
             </tbody>
+            <tfoot>
+              <tr>
+                <td></td>
+                {totals_row}
+                <td></td>
+              </tr>
+            </tfoot>
           </table>
         </div>
         {/* TODO: Statusbar */}
