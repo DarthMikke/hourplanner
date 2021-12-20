@@ -1,0 +1,331 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "version" : "v0 - Testing",
+    "title" : "Hourplanner",
+    "contact" : {
+      "name" : "Michal Jan Warecki"
+    },
+    "license" : {
+      "name" : "GNU GPLv3",
+      "url" : "https://www.gnu.org/licenses/gpl-3.0.html"
+    }
+  },
+  "host" : "localhost",
+  "basePath" : "/planner/api",
+  "tags" : [
+    {
+      "name" : "schedules"
+    }, {
+      "name" : "employees"
+    }, {
+      "name" : "companies"
+    }, {
+      "name" : "divisions"
+    }, {
+      "name" : "users"
+    }
+  ],
+  "paths": {
+    "/schedules/list": {
+      "get": {
+        "tags" : [ "schedules" ],
+        "parameters" : [
+          {
+            "name": "company",
+            "in": "query",
+            "required" : true,
+            "type": "number"
+          }, {
+            "name": "from",
+            "in": "query",
+            "required" : true,
+            "type": "string",
+            "format": "datetime"
+          }, {
+            "name": "to",
+            "in": "query",
+            "required" : true,
+            "type": "string",
+            "format": "datetime"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfull response",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "company": {
+                  "$ref" : "#/definitions/company"
+                },
+                "divisions": {
+                  "type": "array",
+                  "items": {
+                    "$ref" : "#/definitions/division"
+                  }
+                },
+                "employees": {
+                  "type": "array",
+                  "items": {
+                    "$ref" : "#/definitions/employee"
+                  }
+                },
+                "schedules": {
+                  "type": "array",
+                  "items": {
+                    "$ref" : "#/definitions/schedule"
+                  }
+                }
+              }
+            } 
+          },
+          "401": {
+            "description": "The user is not logged in."
+          },
+          "404": {
+            "description": "The company id was not found among user's companies."
+          }
+        }
+      }
+    },
+    "/schedules/create": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "employee",
+            "in": "formData",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "division",
+            "in": "formData",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "from",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "format": "datetime"
+          },
+          {
+            "name": "to",
+            "in": "formData",
+            "required": true,
+            "type": "string",
+            "format": "datetime"
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully added. Returns the schedule with assigned schedule id.",
+            "schema": {
+              "$ref": "#/definitions/schedule"
+            }
+          },
+          "401": {
+            "description": "The user is not authorized."
+          },
+          "404": {
+            "description": "Employee or division was not found."
+          }
+        },
+        "tags": ["schedules"],
+      }
+    },
+    "/schedules/update": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "formData",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "employee",
+            "in": "formData",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "division",
+            "in": "formData",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "from",
+            "in": "formData",
+            "required": false,
+            "type": "string",
+            "format": "datetime"
+          },
+          {
+            "name": "to",
+            "in": "formData",
+            "required": false,
+            "type": "string",
+            "format": "datetime"
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully updated. Returns the schedule with the updated data.",
+            "schema": {
+              "$ref": "#/definitions/schedule"
+            }
+          },
+          "401": {
+            "description": "The user is not authorized."
+          },
+          "404": {
+            "description": "Employee or division was not found."
+          }
+        },
+        "tags": ["schedules"],
+      }
+    },
+    "/schedules/delete": {
+      "post": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "parameters": [
+          {
+            "name": "schedule_id",
+            "in": "formData",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "name": "employee",
+            "in": "formData",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "division",
+            "in": "formData",
+            "required": false,
+            "type": "integer"
+          },
+          {
+            "name": "from",
+            "in": "formData",
+            "required": false,
+            "type": "string",
+            "format": "datetime"
+          },
+          {
+            "name": "to",
+            "in": "formData",
+            "required": false,
+            "type": "string",
+            "format": "datetime"
+          },
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully deleted. Returns the deleted schedule.",
+            "schema": {
+              "$ref": "#/definitions/schedule"
+            }
+          },
+          "401": {
+            "description": "The user is not authorized."
+          },
+          "404": {
+            "description": "Employee, division or schedule was not found."
+          }
+        },
+        "tags": ["schedules"],
+      }
+    }
+  },
+  "definitions": {
+    "schedule": {
+      "type" : "object",
+      "properties": {
+        "schedule_id": {
+          "type": "number",
+          "example": 42
+        },
+        "employee": {
+          "type": "number",
+          "example": 28
+        },
+        "division": {
+          "type": "number",
+          "example": 6,
+          "description": "Division id in the company the employer is employed. It's used to differentiate between schedules of an employee employed in several divisions simultaneously."
+        },
+        "from": {
+          "type": "string",
+          "format": "datetime",
+          "example": "1996-07-16T08:00:00+0200"
+        },
+        "to": {
+          "type": "string",
+          "format": "datetime",
+          "example": "1996-07-16T16:00:00+0200",
+        }
+      }
+    },
+    "company": {
+      "type": "object",
+      "properties": {
+        "company_id": {
+          "type": "number",
+          "example": 42
+        },
+        "name": {
+          "type": "string",
+          "example": "ACME Inc."
+        }
+      },
+      "description": "A company"
+    },
+    "division": {
+      "type": "object",
+      "properties": {
+        "division_id": {
+          "type": "integer",
+          "example": 11
+        },
+        "name": {
+          "type": "string",
+          "example": "Production"
+        }
+      }
+    },
+    "employee": {
+      "type": "object",
+      "properties": {
+        "employee_id": {
+          "type": "number",
+          "example": 23
+        },
+        "name": {
+          "type": "string",
+          "example": "Alice"
+        },
+        "divisions": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}
