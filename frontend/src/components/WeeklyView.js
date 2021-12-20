@@ -89,7 +89,37 @@ class WeeklyView extends Component {
   }
 
   updateSchedule(from, to) {
+    // This method, when used for editing a schedule, only works
+    // when `from` and `to` schedule have same schedule id.
+    console.log("Changing from", from, "to", to);
 
+    let all_schedules = this.state.schedules;
+    if (from.schedule_id === undefined) {
+      // Create schedule
+      all_schedules.push(to);
+    } else {
+      let index = this.state.schedules.findIndex(x => {return x.schedule_id === from.schedule_id})
+      console.log(`Found schedule with id ${from.schedule_id} at index ${index}.`)
+      if(to.schedule_id === null) {
+        // Delete schedule
+        all_schedules.splice(index, 1);
+      } else {
+        // Update schedule
+        let index = this.state.schedules.findIndex(x => {return x.schedule_id === from.schedule_id})
+        let old_schedule = this.state.schedules[index];
+        let new_schedule = this.state.schedules[index];
+        console.trace()
+        console.log(to, new_schedule)
+        new_schedule.schedule_id = to.schedule_id
+        new_schedule.from = to.from
+        new_schedule.to = to.to
+        all_schedules[index] = new_schedule;
+      }
+    }
+
+    this.setState({
+      schedules: all_schedules
+    })
     return
   }
 
@@ -103,7 +133,7 @@ class WeeklyView extends Component {
        dates={this.state.dates}
        plannedWorkhours={this.state.schedules}
        employee={employee}
-       completion={(old_schedule, new_schedule) => {this.loadData(this.state.from, this.state.to)}} />
+       completion={(old_schedule, new_schedule) => {this.updateSchedule(old_schedule, new_schedule)}} />
     })
     let totals_row = this.state.dates.map((date) => {
       let next_day = new Date(((date/1000)+24*3600)*1000)

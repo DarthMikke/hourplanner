@@ -131,6 +131,14 @@ class Schedule extends Component {
         let waitTime = window.location.hostname === "localhost" ? 3000 : 1000
         console.log(`Waiting ${waitTime} ms…`)
         setTimeout(() => {
+          let old_schedule = {
+            schedule_id: this.state.viewmodels[index].schedule_id,
+            employee: this.state.viewmodels[index].employee_id,
+            from: this.state.viewmodels[index].from.toISOString(),
+            to: this.state.viewmodels[index].to.toISOString(),
+            duration: this.state.viewmodels[index].duration,
+          }
+
           let viewmodels = this.state.viewmodels
 
           viewmodels[index].schedule_id = data.schedule_id;
@@ -139,17 +147,13 @@ class Schedule extends Component {
 
           this.setState({waiting: false, viewmodels: viewmodels});
 
-          old_schedule.from = old_schedule.from.toISOString()
-          old_schedule.to = old_schedule.to.toISOString()
-          let new_schedule = {
+          /*let new_schedule = {
             schedule_id: data.schedule_id,
             from: data.from,
             to: data.to
-          }
-          this.props.completion(old_schedule, new_schedule);
+          }*/
+          this.props.completion(old_schedule, data);
           /* TODO: completion should take old schedule and new schedule as parameters.
-           * However, the present thing does seem to work, but it will only be possible
-           * to evaluate it after the creation/updating API is in place.
            */
         }, waitTime);
       })
@@ -173,12 +177,12 @@ class Schedule extends Component {
         if (!x.ok) {
           this.setState({error: wh_id, waiting_to_delete: false});
         }
-        console.log("#152");
+        console.trace();
         return x.json();
       })
       .catch((e) => {
         this.setState({error: wh_id, waiting_to_delete: false});
-        console.log(`Error #157: ${e}`)
+        console.trace();
         return {error: e}
       })
       .then((data) => {
@@ -187,7 +191,8 @@ class Schedule extends Component {
         }
         let removed = this.state.viewmodels.splice(index, 1);
         this.setState({waiting_to_delete: false});
-        console.log("#166");
+        this.props.completion(removed, null);
+        console.trace();
       });
   }
 
