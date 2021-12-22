@@ -4,8 +4,9 @@ import Pencil from '../icons/pencil.svg';
 import Trash from '../icons/trash.svg';
 import { ReactComponent as ErrorIcon } from '../icons/exclamation-triangle-fill.svg';
 import { ReactComponent as WaitingIcon } from '../icons/cloud-arrow-up.svg';
+import getCookie from '../getcookie.js';
 
-import EditingSingleSchedule from '../components/EditingSingleSchedule.js'
+import EditingSingleSchedule from '../components/EditingSingleSchedule.js';
 
 class Schedule extends Component {
   viewmodel = null
@@ -111,6 +112,9 @@ class Schedule extends Component {
     // Differentiate by `typeof(this.state.editing)` (undefined or int).
     let endpoint = this.state.editing === undefined ? "api/records/create" : "api/records/update"
     fetch(endpoint, { method: "POST", body: formData })
+    let endpoint = wh_id === -1 ? "api/schedules/create" : "api/schedules/update"
+    console.log(`Sender førespurnad til ${endpoint}`)
+    fetch(endpoint, { method: "POST", body: formData, headers: {"x-csrftoken": getCookie("csrftoken")} })
       .then(response => {
         if (!response.ok) {
           console.log(`Request answered with status ${response.status}.`);
@@ -173,6 +177,9 @@ class Schedule extends Component {
     }
 
     fetch('api/records/delete', { method: 'POST', body: formData })
+    let endpoint = 'api/schedules/delete';
+    console.log(`Sender førespurnad til ${endpoint}`)
+    fetch(endpoint, { method: 'POST', body: formData, headers: {"x-csrftoken": getCookie("csrftoken")} })
       .then(x => {
         if (!x.ok) {
           this.setState({error: wh_id, waiting_to_delete: false});
