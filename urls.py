@@ -20,5 +20,6 @@ urlpatterns = [
   path('accounts/reset/done/', auth_views.PasswordResetCompleteView.as_view(), name='password_reset_complete'),
   path('api/me', views.me, name='me API'),
   path('api/schedules/list', views.schedules_list),
+  path('api/schedules/create', views.schedule_add),
   path('app.html', views.main, name='main'),
 ]

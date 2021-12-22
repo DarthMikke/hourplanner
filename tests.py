@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.test import RequestFactory, TestCase
 from django.contrib.auth.models import AnonymousUser, User
 from .models import Employee, Company, Division, Schedule
-from .views import me, schedules_list
+from .views import me, schedules_list, schedule_add
 
 # Create your tests here.
 
@@ -171,32 +171,45 @@ class AddScheduleAPITestCase(TestCase):
         self.employee.save()
 
     def test_successfully(self):
-        start = "1996-07-16T08:00%2B01:00"
-        end = "1996-07-16T16:00%2B01:00"
+        start = "1996-07-16T08:00+01:00"
+        end = "1996-07-16T16:00+01:00"
         # July 16, 1996 -- discovered the source of the Amazon River
-        request = self.factory.post(f"/planner/api/schedules/add", {
-            "employee"=employee_id,
-            "division"=division_id,
-            "from"=start,
-            "to"=end
+        request = self.factory.post(f"/planner/api/schedules/create", {
+            "employee": self.employee.employee_id,
+            "division": self.division.division_id,
+            "from": start,
+            "to": end
         })
 
         request.user = self.user
         response = schedule_add(request)
         self.assertEqual(response.status_code, 200)
-        response = response.content
+        response = json.loads(response.content)
+
         self.assertTrue('schedule_id' in response.keys())
         self.assertEqual(type(response['schedule_id']), int)
         self.assertTrue(len(Schedule.objects.filter(schedule_id=response['schedule_id'])), 1)
-        self.assertEqual(response['employee'], employee_id)
-        self.assertEqual(response['division'], division_id)
+        self.assertEqual(response['employee'], self.employee.employee_id)
+        self.assertEqual(response['division'], self.division.division_id)
 
-        start_datetime = datetime.fromisoformat("1996-07-16T08:00+01:00")
-        end_datetime = datetime.fromisoformat("1996-07-16T16:00+01:00")
+        start_datetime = datetime.fromisoformat(start)
+        end_datetime = datetime.fromisoformat(end)
         response_from_datetime = datetime.fromisoformat(response['from'].replace("Z", "+00:00"))
         response_to_datetime = datetime.fromisoformat(response['to'].replace("Z", "+00:00"))
         self.assertEqual(response_from_datetime, start_datetime)
         self.assertEqual(response_to_datetime, end_datetime)
 
     def test_with_non_staff_user(self):
-        ...
+        start = "1996-07-16T08:00+01:00"
+        end = "1996-07-16T16:00+01:00"
+        # July 16, 1996 -- discovered the source of the Amazon River
+        request = self.factory.post(f"/planner/api/schedules/create", {
+            "employee": self.employee.employee_id,
+            "division": self.division.division_id,
+            "from": start,
+            "to": end
+        })
+
+        request.user = AnonymousUser
+        response = schedule_add(request)
+        self.assertEqual(response.status_code, 401)
