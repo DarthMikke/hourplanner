@@ -16,6 +16,7 @@ export default class WeekdaysRow extends Component {
           return {
             employee: x.employee,
             schedule_id: x.schedule_id,
+            division: x.division,
             from: from,
             to: to,
             duration: (to - from)/1000/3600 // hours
@@ -38,6 +39,7 @@ export default class WeekdaysRow extends Component {
         key={date} 
         day={date}
         employee_id={this.props.employee.employee_id}
+        division={this.props.division}
         viewmodels={schedule_this_day}
         completion={(old_schedule, new_schedule) => {this.props.completion(old_schedule, new_schedule)}}/>
     })

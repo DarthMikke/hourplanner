@@ -49,14 +49,15 @@ class Schedule extends Component {
     let to = new Date((this.props.day/1000 + 16*3600)*1000)
     let new_viewmodels = this.state.viewmodels
     new_viewmodels.push({
-      employee_id: this.props.employee_id,
-      schedule_id: undefined,
+      employee: this.props.employee_id,
+      division: this.props.division.division_id,
+      schedule_id: -1,
       from: from,
       to: to,
       duration: (to - from)/1000/3600 // TODO: Forhandsinnstilte standardarbeidstider
     })
     this.setState({
-      editing: undefined,
+      editing: -1,
       viewmodels: new_viewmodels,
     })
   }
@@ -73,7 +74,7 @@ class Schedule extends Component {
   save(from, to) {
     // Oppdater viewmodels
     let wh_id = this.state.editing;
-    let index = this.props.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
+    let index = this.state.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
     let newFrom, newTo;
     newFrom = new Date(
       this.props.day.getFullYear(),
@@ -91,6 +92,7 @@ class Schedule extends Component {
     )
     console.log(`${newFrom}–${newTo}`);
     let new_viewmodels = this.state.viewmodels
+    console.log(wh_id, index, new_viewmodels);
     new_viewmodels[index].from = newFrom;
     new_viewmodels[index].to = newTo;
 
@@ -103,15 +105,26 @@ class Schedule extends Component {
 
     // Send API-førespurnad
     let formData = new FormData();
-    for (let x in Object.keys(this.state.viewmodels[index])
-      .filter(x => x != "schedule_id")) {
-      formData.append(x, this.state.viewmodels[index][x])
+    let viewmodel_to_form = {
+      schedule_id: new_viewmodels[index].schedule_id,
+      employee: new_viewmodels[index].employee,
+      division: new_viewmodels[index].division,
+      from: new_viewmodels[index].from.toISOString(),
+      to: new_viewmodels[index].to.toISOString(),
+      duration: new_viewmodels[index].duration
+    }
+
+    console.log(viewmodel_to_form);
+    for (let x in viewmodel_to_form) {
+      if (x == "schedule_id" && wh_id === -1) {
+        continue
+      }
+      console.log(x, viewmodel_to_form[x])
+      formData.append(x, viewmodel_to_form[x])
     }
 
     // TODO: Different API endpoints for creating and adding an entry.
     // Differentiate by `typeof(this.state.editing)` (undefined or int).
-    let endpoint = this.state.editing === undefined ? "api/records/create" : "api/records/update"
-    fetch(endpoint, { method: "POST", body: formData })
     let endpoint = wh_id === -1 ? "api/schedules/create" : "api/schedules/update"
     console.log(`Sender førespurnad til ${endpoint}`)
     fetch(endpoint, { method: "POST", body: formData, headers: {"x-csrftoken": getCookie("csrftoken")} })
@@ -137,9 +150,10 @@ class Schedule extends Component {
         setTimeout(() => {
           let old_schedule = {
             schedule_id: this.state.viewmodels[index].schedule_id,
-            employee: this.state.viewmodels[index].employee_id,
-            from: this.state.viewmodels[index].from.toISOString(),
-            to: this.state.viewmodels[index].to.toISOString(),
+            employee: this.state.viewmodels[index].employee,
+            division: this.state.viewmodels[index].division,
+            from: this.state.viewmodels[index].from,
+            to: this.state.viewmodels[index].to,
             duration: this.state.viewmodels[index].duration,
           }
 
@@ -156,7 +170,7 @@ class Schedule extends Component {
             from: data.from,
             to: data.to
           }*/
-          this.props.completion(old_schedule, data);
+          this.props.completion(old_schedule, viewmodels[index]);
           /* TODO: completion should take old schedule and new schedule as parameters.
            */
         }, waitTime);
@@ -171,12 +185,10 @@ class Schedule extends Component {
 
     // Send API-førespurnad
     let formData = new FormData();
-    for (let x in Object.keys(this.state.viewmodels[index])
-      .filter(x => x != "schedule_id")) {
+    for (let x in this.state.viewmodels[index]) {
       formData.append(x, this.state.viewmodels[index][x])
     }
 
-    fetch('api/records/delete', { method: 'POST', body: formData })
     let endpoint = 'api/schedules/delete';
     console.log(`Sender førespurnad til ${endpoint}`)
     fetch(endpoint, { method: 'POST', body: formData, headers: {"x-csrftoken": getCookie("csrftoken")} })
@@ -213,6 +225,7 @@ class Schedule extends Component {
 
   render() {
     let divContent = this.state.viewmodels.map(x => {
+      console.log(x)
       let returnContent = null
       if (this.state.editing === x.schedule_id) {
         returnContent = [

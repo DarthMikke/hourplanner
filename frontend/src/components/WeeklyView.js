@@ -94,7 +94,7 @@ class WeeklyView extends Component {
     console.log("Changing from", from, "to", to);
 
     let all_schedules = this.state.schedules;
-    if (from.schedule_id === undefined) {
+    if (from.schedule_id === -1) {
       // Create schedule
       all_schedules.push(to);
     } else {
@@ -109,7 +109,7 @@ class WeeklyView extends Component {
         let old_schedule = this.state.schedules[index];
         let new_schedule = this.state.schedules[index];
         console.trace()
-        console.log(to, new_schedule)
+        console.log(from.schedule_id, to, new_schedule)
         new_schedule.schedule_id = to.schedule_id
         new_schedule.from = to.from
         new_schedule.to = to.to
@@ -128,9 +128,13 @@ class WeeklyView extends Component {
     let lastDay = this.f3.format(this.state.to)
 
     let headers = <WeekdaysRow dates={this.state.dates} />
+    /*let divisions = this.state.divisions.map(division => {
+
+    })*/
     let employees = this.state.employees.map(employee => {
       return <EmployeeRow
        dates={this.state.dates}
+       division={this.state.divisions[0]}
        plannedWorkhours={this.state.schedules}
        employee={employee}
        completion={(old_schedule, new_schedule) => {this.updateSchedule(old_schedule, new_schedule)}} />
