@@ -263,7 +263,7 @@ class Schedule extends Component {
           { badge }
         </>
       }
-      let classes = ["border-bottom", "text-center", "align-items-center", "py-2"]
+      let classes = ["border-bottom", "text-center", "align-items-center", "py-1"]
       classes.push((this.state.error === x.schedule_id
         || this.state.waiting_to_delete === x.schedule_id)
           ? "waiting-for-deletion"
@@ -273,19 +273,28 @@ class Schedule extends Component {
       </div>
     })
 
-    let addButton = <button
-      type="button"
-      onClick={() => this.create()}
-      className="rounded-pill btn btn-secondary"><AddIcon /></button>
+    let addButton = <div ><AddIcon /></div>
 
-    let classes = ["hiding-button", "d-flex", "justify-content-center", "align-items-center"]
-    classes.push(divContent.length === 0 ? "p-3" : "p-1")
+    let classes = [
+      "hiding-button",
+      "button",
+      "btn",
+      "btn-secondary",
+      "d-flex",
+      "justify-content-center",
+      "align-items-center",
+      "border-0",
+      "rounded-bottom"
+    ]
+    classes.push(divContent.length === 0 ? "p-3" : "p-1 rounded-0")
     classes.push(this.state.showButtons ? null : "hide")
 
-    divContent.push(<div className={classes.join(" ")}>{addButton}</div>)
+    divContent.push(<div
+      onClick={() => this.create()} className={classes.join(" ")}>{addButton}</div>)
 
     return <td
       style={{width: "8.5em"}}
+      className="p-1 align-middle"
       onMouseEnter={() => {
           if (this.state.editing !== false) { return } 
           this.setState({showButtons: true});

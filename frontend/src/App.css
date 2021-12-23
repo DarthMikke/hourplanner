@@ -72,6 +72,13 @@
   /* animation: fadeOut; */
 }
 
+.button {
+  background-color: #fefefe;
+  color: #ffffff;
+  width: 100%;
+  height: 100%;
+}
+
 /*
 .addbutton {
   animation-name: fadeIn;
