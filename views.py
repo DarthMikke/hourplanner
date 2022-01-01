@@ -244,7 +244,45 @@ def schedule_update(request):
 
 
 def schedule_delete(request):
-    return Responses.not_implemented()
+    # is the user authenticated?
+    # if the user is not authenticated, return 401 with JSON describing the error.
+    if (not request.user.is_authenticated) or request.user.is_anonymous:
+        return Responses.unauthorized()
+
+    # check that company, to and from are specified.
+    # return 400 if one of those is missing.
+    if not 'schedule_id' in request.POST.keys():
+        return Responses.bad_request(data={'internal_error_code': 1, 'details': f'Provided keys are {request.POST.keys()}'})
+
+    # validate the POST fields.
+    try:
+        schedule_id = int(request.POST['schedule_id'])
+    except ValueError as e:
+        print(repr(request.POST))
+        return Responses.bad_request(data={'internal_error_code': 2, 'details': str(e)})
+
+    schedule = Schedule.objects.get(schedule_id=schedule_id)
+    if schedule is None:
+        return Responses.not_found()
+
+    # check that the user is staff at the specified company.
+    # check that the schedule's employee is employed at the specified company.
+    # return 404
+    # if division id is not among divisions the employee is part of,
+    # or if employee id is not among employees the user can manage.
+
+    # company = Employee.objects.get(user=request.user).get_company()
+    user_profile = Employee.objects.get(user=request.user)
+    if not request.user.is_staff:
+        return Responses.forbidden()
+
+    if user_profile.get_company() != schedule.division.company:
+        return Responses.not_found()
+
+    serialized = schedule.serialize()
+    schedule.delete()
+
+    return JsonResponse(serialized)
 
 
 def main(request):
