@@ -11,6 +11,7 @@ def error(status, msg=None, data=None):
     standard_msg = {
         400: 'Your request contains an error',
         401: 'Not authenticated',
+        403: 'Forbidden',
         404: 'Item has not been found',
         500: 'An error has occured',
         501: 'This action is not yet implemented',
@@ -34,6 +35,9 @@ def bad_request(msg=None, data=None):
 
 def unauthorized(msg=None, data=None):
     return error(401, msg, data)
+
+def forbidden(msg=None, data=None):
+    return error(403, msg, data)
 
 def not_found(msg=None, data=None):
     return error(404, msg, data)
