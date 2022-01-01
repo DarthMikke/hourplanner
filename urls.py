@@ -21,5 +21,7 @@ urlpatterns = [
   path('api/me', views.me, name='me API'),
   path('api/schedules/list', views.schedules_list),
   path('api/schedules/create', views.schedule_add),
+  path('api/schedules/update', views.schedule_update),
+  path('api/schedules/delete', views.schedule_delete),
   path('app.html', views.main, name='main'),
 ]
