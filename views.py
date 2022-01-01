@@ -243,7 +243,7 @@ def schedule_update(request):
     return JsonResponse(schedule.serialize())
 
 
-def schedule_remove(request):
+def schedule_delete(request):
     return Responses.not_implemented()
 
 
