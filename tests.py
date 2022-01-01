@@ -458,8 +458,7 @@ class DeleteScheduleAPITestCase(TestCase):
         response = json.loads(response.content)
         self.assertEqual(response['schedule_id'], schedule_id)
 
-        fetched = Schedule.objects.get(schedule_id=schedule_id)
-        self.assertEqual(fetched, None)
+        self.assertRaises(Schedule.DoesNotExist, lambda: Schedule.objects.get(schedule_id=schedule_id))
 
     def test_another_division_successfully(self):
         """A staff user deletes schedule of a user from another division"""
@@ -473,8 +472,7 @@ class DeleteScheduleAPITestCase(TestCase):
         response = json.loads(response.content)
         self.assertEqual(response['schedule_id'], schedule_id)
 
-        fetched = Schedule.objects.get(schedule_id=schedule_id)
-        self.assertEqual(fetched, None)
+        self.assertRaises(Schedule.DoesNotExist, lambda: Schedule.objects.get(schedule_id=schedule_id))
 
     def test_with_wrong_user(self):
         schedule = self.schedule.serialize()
