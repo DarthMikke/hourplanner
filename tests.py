@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from django.test import RequestFactory, TestCase
 from django.contrib.auth.models import AnonymousUser, User
 from .models import Employee, Company, Division, Schedule
-from .views import me, schedules_list, schedule_add
+from .views import me, schedules_list, schedule_add, schedule_update, schedule_delete
 
 # Create your tests here.
 
@@ -213,3 +213,292 @@ class AddScheduleAPITestCase(TestCase):
         request.user = AnonymousUser
         response = schedule_add(request)
         self.assertEqual(response.status_code, 401)
+
+
+class UpdateScheduleAPITestCase(TestCase):
+    def setUp(self):
+        # Every test needs access to the request factory.
+        self.factory = RequestFactory()
+
+        # Create some employees and the environment around
+        self.company = Company.objects.create(name="Baker's café")
+        self.divisions = {
+            'bakery': Division.objects.create(name="Bakery", company=self.company),
+            'cafe': Division.objects.create(name="Café", company=self.company),
+        }
+
+        self.employees = []
+        self.user = User.objects.create_user(
+            username='test_boss',
+            email='boss@ema.il',
+            password='top_secret',
+            is_staff=True
+        )
+        employee = Employee.objects.get(user=self.user)
+        employee.name = "Boss"
+        employee.division = self.divisions['cafe']
+        employee.save()
+        self.employees.append(employee)
+        x = 1
+        for division in ['cafe', 'cafe', 'cafe', 'bakery', 'bakery']:
+            user = User.objects.create_user(
+                username=f'employee_{x}',
+                email=f'test_{x}@ema.il',
+                password='top_secret'
+            )
+            employee = Employee.objects.get(user=user)
+            employee.name=f"Employee {x}"
+            employee.division = self.divisions[division]
+            employee.save()
+            self.employees.append(employee)
+            x += 1
+
+        # Create some planned schedules.
+        tz = datetime.now().astimezone().tzinfo
+        self.schedules = []
+        date = datetime(2021, 11, 1, tzinfo=tz)
+        end_date = datetime(2021, 11, 5, tzinfo=tz)
+        while date <= end_date:
+            self.schedules.append(
+                self.employees[0].add_schedule(
+                    start=date + timedelta(hours=6),
+                    end=date + timedelta(hours=14)
+                )
+            )
+            self.schedules.append(
+                self.employees[1].add_schedule(
+                    start=date + timedelta(hours=8),
+                    end=date + timedelta(hours=16)
+                )
+            )
+            self.schedules.append(
+                self.employees[2].add_schedule(
+                    start=date + timedelta(hours=11),
+                    end=date + timedelta(hours=19)
+                )
+            )
+            self.schedules.append(
+                self.employees[3].add_schedule(
+                    start=date + timedelta(hours=4),
+                    end=date + timedelta(hours=12)
+                )
+            )
+            self.schedules.append(
+                self.employees[4].add_schedule(
+                    start=date + timedelta(hours=10),
+                    end=date + timedelta(hours=18)
+                )
+            )
+
+            date += timedelta(1)
+
+        self.schedule = self.employees[0].add_schedule(
+            start=date + timedelta(hours=6),
+            end=date + timedelta(hours=14)
+        )
+
+    def test_successfully(self):
+        tz = datetime.now().astimezone().tzinfo
+        new_start = datetime(1996, 7, 16, 11, 0, tzinfo=tz).isoformat()
+        new_end = datetime(1996, 7, 16, 15, 0, tzinfo=tz).isoformat()
+        schedule = self.schedule.serialize()
+        schedule['from'] = new_start
+        schedule['to'] = new_end
+
+        request = self.factory.post('/planner/api/schedules/update', schedule)
+        request.user = self.employees[0].user
+        response = schedule_update(request)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.content)
+        self.assertEqual(response['schedule_id'], schedule['schedule_id'])
+
+    def test_another_division_successfully(self):
+        """A staff user updates schedule of a user from another division"""
+        tz = datetime.now().astimezone().tzinfo
+        new_start = datetime(1996, 7, 16, 11, 0, tzinfo=tz).isoformat()
+        new_end = datetime(1996, 7, 16, 15, 0, tzinfo=tz).isoformat()
+        schedule = self.schedules[4].serialize()
+        schedule['from'] = new_start
+        schedule['to'] = new_end
+
+        request = self.factory.post('/planner/api/schedules/update', schedule)
+        request.user = self.employees[0].user
+        response = schedule_update(request)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.content)
+        self.assertEqual(response['schedule_id'], schedule['schedule_id'])
+
+    def test_with_wrong_user(self):
+        tz = datetime.now().astimezone().tzinfo
+        new_start = datetime(1996, 7, 16, 11, 0, tzinfo=tz).isoformat()
+        new_end = datetime(1996, 7, 16, 15, 0, tzinfo=tz).isoformat()
+        schedule = self.schedule.serialize()
+        schedule['from'] = new_start
+        schedule['to'] = new_end
+
+        request = self.factory.post('/planner/api/schedules/update', schedule)
+        request.user = self.employees[3].user
+        response = schedule_update(request)
+        self.assertEqual(response.status_code, 403)
+
+    def test_with_wrong_company(self):
+        """A user edits schedule of a user from another company"""
+        tz = datetime.now().astimezone().tzinfo
+        new_start = datetime(1996, 7, 16, 11, 0, tzinfo=tz).isoformat()
+        new_end = datetime(1996, 7, 16, 15, 0, tzinfo=tz).isoformat()
+        schedule = self.schedule.serialize()
+        schedule['from'] = new_start
+        schedule['to'] = new_end
+
+        another_company = Company.objects.create(name="Another Co.")
+        another_division = Division.objects.create(name="HQ", company=another_company)
+        another_user = User.objects.create_user(
+            username='another_boss',
+            email='boss@another.co',
+            password='top_secret',
+            is_staff=True
+        )
+
+        request = self.factory.post('/planner/api/schedules/update', schedule)
+        request.user = another_user
+        response = schedule_update(request)
+        self.assertEqual(response.status_code, 404)
+
+
+class DeleteScheduleAPITestCase(TestCase):
+    def setUp(self):
+        # Every test needs access to the request factory.
+        self.factory = RequestFactory()
+
+        # Create some employees and the environment around
+        self.company = Company.objects.create(name="Baker's café")
+        self.divisions = {
+            'bakery': Division.objects.create(name="Bakery", company=self.company),
+            'cafe': Division.objects.create(name="Café", company=self.company),
+        }
+
+        self.employees = []
+        self.user = User.objects.create_user(
+            username='test_boss',
+            email='boss@ema.il',
+            password='top_secret',
+            is_staff=True
+        )
+        employee = Employee.objects.get(user=self.user)
+        employee.name = "Boss"
+        employee.division = self.divisions['cafe']
+        employee.save()
+        self.employees.append(employee)
+        x = 1
+        for division in ['cafe', 'cafe', 'cafe', 'bakery', 'bakery']:
+            user = User.objects.create_user(
+                username=f'employee_{x}',
+                email=f'test_{x}@ema.il',
+                password='top_secret'
+            )
+            employee = Employee.objects.get(user=user)
+            employee.name=f"Employee {x}"
+            employee.division = self.divisions[division]
+            employee.save()
+            self.employees.append(employee)
+            x += 1
+
+        # Create some planned schedules.
+        tz = datetime.now().astimezone().tzinfo
+        self.schedules = []
+        date = datetime(2021, 11, 1, tzinfo=tz)
+        end_date = datetime(2021, 11, 5, tzinfo=tz)
+        while date <= end_date:
+            self.schedules.append(
+                self.employees[0].add_schedule(
+                    start=date + timedelta(hours=6),
+                    end=date + timedelta(hours=14)
+                )
+            )
+            self.schedules.append(
+                self.employees[1].add_schedule(
+                    start=date + timedelta(hours=8),
+                    end=date + timedelta(hours=16)
+                )
+            )
+            self.schedules.append(
+                self.employees[2].add_schedule(
+                    start=date + timedelta(hours=11),
+                    end=date + timedelta(hours=19)
+                )
+            )
+            self.schedules.append(
+                self.employees[3].add_schedule(
+                    start=date + timedelta(hours=4),
+                    end=date + timedelta(hours=12)
+                )
+            )
+            self.schedules.append(
+                self.employees[4].add_schedule(
+                    start=date + timedelta(hours=10),
+                    end=date + timedelta(hours=18)
+                )
+            )
+
+            date += timedelta(1)
+
+        self.schedule = self.employees[0].add_schedule(
+            start=date + timedelta(hours=6),
+            end=date + timedelta(hours=14)
+        )
+
+    def test_successfully(self):
+        schedule = self.schedule.serialize()
+        schedule_id = schedule['schedule_id']
+
+        request = self.factory.post('/planner/api/schedules/delete', schedule)
+        request.user = self.employees[0].user
+        response = schedule_delete(request)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.content)
+        self.assertEqual(response['schedule_id'], schedule_id)
+
+        self.assertRaises(Schedule.DoesNotExist, lambda: Schedule.objects.get(schedule_id=schedule_id))
+
+    def test_another_division_successfully(self):
+        """A staff user deletes schedule of a user from another division"""
+        schedule = self.schedules[4].serialize()
+        schedule_id = schedule['schedule_id']
+
+        request = self.factory.post('/planner/api/schedules/delete', schedule)
+        request.user = self.employees[0].user
+        response = schedule_delete(request)
+        self.assertEqual(response.status_code, 200)
+        response = json.loads(response.content)
+        self.assertEqual(response['schedule_id'], schedule_id)
+
+        self.assertRaises(Schedule.DoesNotExist, lambda: Schedule.objects.get(schedule_id=schedule_id))
+
+    def test_with_wrong_user(self):
+        schedule = self.schedule.serialize()
+        schedule_id = schedule['schedule_id']
+
+        request = self.factory.post('/planner/api/schedules/delete', schedule)
+        request.user = self.employees[3].user
+        response = schedule_delete(request)
+        self.assertEqual(response.status_code, 403)
+
+    def test_with_wrong_company(self):
+        """A user deletes schedule of a user from another company"""
+        schedule = self.schedule.serialize()
+        schedule_id = schedule['schedule_id']
+
+        another_company = Company.objects.create(name="Another Co.")
+        another_division = Division.objects.create(name="HQ", company=another_company)
+        another_user = User.objects.create_user(
+            username='another_boss',
+            email='boss@another.co',
+            password='top_secret',
+            is_staff=True
+        )
+
+        request = self.factory.post('/planner/api/schedules/delete', schedule)
+        request.user = another_user
+        response = schedule_delete(request)
+        self.assertEqual(response.status_code, 404)
+
