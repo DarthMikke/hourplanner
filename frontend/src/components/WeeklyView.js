@@ -100,8 +100,9 @@ class WeeklyView extends Component {
     } else {
       let index = this.state.schedules.findIndex(x => {return x.schedule_id === from.schedule_id})
       console.log(`Found schedule with id ${from.schedule_id} at index ${index}.`)
-      if(to.schedule_id === null) {
+      if(to === null) {
         // Delete schedule
+        console.log(`Deleting schedule no. ${from.schedule_id}...`)
         all_schedules.splice(index, 1);
       } else {
         // Update schedule

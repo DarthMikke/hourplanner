@@ -202,6 +202,7 @@ class Schedule extends Component {
       .catch((e) => {
         this.setState({error: wh_id, waiting_to_delete: false});
         console.trace();
+        console.log(e);
         return {error: e}
       })
       .then((data) => {
@@ -210,7 +211,7 @@ class Schedule extends Component {
         }
         let removed = this.state.viewmodels.splice(index, 1);
         this.setState({waiting_to_delete: false});
-        this.props.completion(removed, null);
+        this.props.completion(removed[0], null);
         console.trace();
       });
   }
