@@ -179,9 +179,21 @@ class Schedule extends Component {
 
   delete() {
     let wh_id = this.state.editing;
-    let index = this.state.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
+    if (wh_id === -1) {
+      let index = this.state.viewmodels.findIndex(x => x.schedule_id === -1);
+      console.log(index === -1 ? "Did not find schedule" : `Did find schedule at index ${index}`);
+      let new_viewmodels = this.state.viewmodels;
+      new_viewmodels.splice(index, 1)
+      this.setState({
+        editing: false,
+        viewmodels: new_viewmodels,
+      });
+
+      return;
+    }
 
     this.setState({waiting_to_delete: wh_id, editing: false});
+    let index = this.state.viewmodels.findIndex(x => {return x.schedule_id === wh_id})
 
     // Send API-førespurnad
     let formData = new FormData();
